@@ -3,7 +3,6 @@ package app
 import (
 	"encoding/json"
 	"encoding/xml"
-	"fmt"
 	"net/http"
 
 	"github.com/dannielss/banking/service"
@@ -35,17 +34,16 @@ func (ch *CustomerHandlers) getCustomer(w http.ResponseWriter, r *http.Request) 
 	customer, err := ch.service.GetCustomer(id)
 
 	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
-		fmt.Println(err.Error())
+		writeResponse(w, err.Code, err.AsMessage())
 	} else {
-		if r.Header.Get("Content-Type") == "application/xml" {
-			w.Header().Set("Content-Type", "application/xml")
+		writeResponse(w, http.StatusOK, customer)
+	}
+}
 
-			xml.NewEncoder(w).Encode(customer)
-		} else {
-			w.Header().Set("Content-Type", "application/json")
-
-			json.NewEncoder(w).Encode(customer)
-		}
+func writeResponse(w http.ResponseWriter, code int, data any) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(code)
+	if err := json.NewEncoder(w).Encode(data); err != nil {
+		panic(err)
 	}
 }
